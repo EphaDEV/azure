@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hermes OS</title>
+    <link rel="icon" href="shade.png" type="image/png">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    background: url('slke.png') no-repeat center center fixed;
+    background-size: cover; /* Makes sure the image fills the screen */
+}
+
+
+/* Desktop layout */
+.desktop {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+    height: calc(100vh - 50px);
+    overflow: hidden;
+    position: relative;
+    z-index: 1; /* Ensures content appears above the video */
+}
+
+
+
+.desktop .icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+    text-align: center;
+    position: absolute;
+    cursor: move;
+    background-color: transparent;
+    border-radius: 6px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+/* Style for selected icon */
+.desktop .icon.selected {
+    background-color: rgba(0, 120, 215, 0.2); /* Windows 11 blue highlight */
+    box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.6);
+}
+
+/* Optional: give the image a little hover feel */
+.desktop .icon img {
+    width: 48px;
+    height: 48px;
+    transition: transform 0.2s;
+}
+
+        .desktop .icon-text {
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: rgb(255, 255, 255); 
+        }
+
+        .taskbar {
+    background-color: #000000;
+    color: black;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    width: 100%;
+    position: fixed;
+    bottom: 0; /* locked at the top */
+    left: 0;
+    z-index: 100;
+    cursor: pointer;
+    overflow-x: auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+}
+
+.taskbar-icon {
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
+    margin: 0 10px;
+    position: relative;
+    transition: all 0.25s ease;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}       
+
+.taskbar-icon::before {                     
+    content: '';
+    position: absolute;
+    top: 3px; /* pushed down slightly */
+    left: 3px;
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    opacity: 0;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(4px);
+    z-index: -1;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-icon:hover::before {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.12);
+}
+
+/* Click animation */
+.taskbar-icon:active {
+    transform: scale(0.95);
+}
+
+
+        .time-display {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: black;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .window {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 0.5px solid rgba(255, 255, 255, 0.06);
+    border-right: 0.5px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    z-index: 1000;
+    overflow: hidden;
+    width: 850px;
+    height: 500px;
+    display: none;
+    color: #ffffff;
+}
+
+.window-header {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #ffffff;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.window-header span {
+    margin-left: 10px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.window-controls {
+    display: flex;
+    align-items: center;
+}
+
+.window-controls button {
+    width: 14px;
+    height: 14px;
+    margin: 0 4px;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: all 0.25s ease;
+    outline: none;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.window-controls button.minimize {
+    background-color:rgb(0, 178, 195);
+}
+
+.window-controls button.maximize {
+    background-color:rgb(2, 251, 77);
+}
+
+.window-controls button.close {
+    background-color:rgb(191, 0, 0);
+}
+
+.window-controls button:hover {
+    transform: scale(1.1);
+    opacity: 0.9;
+}
+
+.window-content {
+    padding: 12px;
+    height: calc(100% - 40px);
+    overflow: auto;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.window-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 6px;
+}
+
+
+        .system-tray {
+    display: flex;
+    align-items: center;
+    padding: 6px;  
+    background-color: #000000;
+    border-radius: 6px;
+    margin-left: auto;
+    height: 24px;  
+}
+
+.system-tray-icon {
+    width: 20px !important;  
+    height: 20px !important; 
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin: 0 3px; 
+    cursor: pointer;
+    background-color: transparent;
+}
+#appLauncher {
+    display: none;
+    position: fixed;
+    bottom: 50px;
+    left: 0;
+    width: 600px;
+    height: 600px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    transform: translateY(100%);
+    z-index: 10; /* Ensures it's above .desktop */
+}
+
+
+        #appLauncher.launcher-open {
+            transform: translateY(0);
+        }
+
+        .launcher-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            background: #1949f7; /* Dark purple with transparency */
+            border-bottom: 1px solid #000000;
+        }
+
+        .launcher-search {
+            width: 90%;
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid #000000;
+            background-color: #000000; /* Dark purple with transparency */
+            color: #000000;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .launcher-icons {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            align-items: flex-start;
+            justify-content: flex-start;
+            height: calc(100% - 60px);
+            overflow-y: auto;
+        }
+
+        .launcher-icon {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 10px;
+            cursor: pointer;
+            background-color: transparent;
+        }
+
+        .launcher-icon img {
+            width: 48px;
+            height: 48px;
+        }
+
+        .launcher-icon .icon-text {
+            font-size: 12px;
+            color: white;
+            margin-top: 5px;
+            text-align: center;
+        }body
+
+
+::selection {
+    background-color: rgba(0, 0, 0, 0.4);
+    color: white;
+}
+
+
+#customMenu {
+    position: absolute;
+    background: rgba(0, 0, 113, 0.8); /* Dark purple with transparency */
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px); /* Retains the blur effect */
+    display: none;
+    width: 200px;
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#customMenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#customMenu li {
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease-in-out;
+    border-radius: 6px;
+}
+
+#customMenu li:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+#audioWidget {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    background: rgba(30, 30, 30, 0.8);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    display: none;
+    width: 300px;
+    padding: 12px;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.audio-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+#audioImage {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    margin-right: 12px;
+}
+
+#audioTitle {
+    font-size: 16px;
+    margin: 0;
+}
+
+#audioSubtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.timeline {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    height: 6px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.progress {
+    background: rgba(255, 255, 255, 0.8);
+    height: 100%;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.control-btn:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+body, * {
+    cursor: url('cursor.cur'), auto !important;
+}
+
+.quick-settings {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6); /* Transparent black background */
+    backdrop-filter: blur(10px); /* Blurring the background */
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 200px;
+    z-index: 1000;
+}
+
+.setting-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+    transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+/* Styling for when a setting item is selected */
+.setting-item.selected {
+    background-color: #00078e; /* Dark plum purple color */
+}
+
+/* Remove hover effect, but add active effect for clicking */
+.setting-item:active {
+    background-color: rgba(0, 0, 0, 0.5); /* Darker background on click */
+}
+
+/* Optional: Make text stand out */
+.setting-item span {
+    font-weight: bold;
+}
+
+
+
+    </style>
+</head>
+<body>
+
+
+    <div class="quick-settings" id="quickSettings">
+        <div class="setting-item">WiFi</div>
+        <div class="setting-item">Sound</div>
+        <div class="setting-item">Night Light</div>
+        <div class="setting-item">Bluetooth</div>
+        <div class="setting-item">Battery Saver</div>
+        <div class="setting-item">Backup</div>
+    </div>
+
+    
+    <div id="audioWidget">
+        <div class="audio-header">
+            <img id="audioImage" src="radical.jpg" alt="Audio Image">
+            <div>
+                <h4 id="audioTitle">Welcome Home, Son</h4>
+                <p id="audioSubtitle">Radical Face</p>
+            </div>
+        </div>
+        <div class="timeline">
+            <div class="progress"></div>
+        </div>
+        <div class="controls">
+            <button id="prevButton" class="control-btn">
+                <i class="fa fa-backward"></i>
+            </button>
+            <button id="playPauseButton" class="control-btn">
+                <i class="fa fa-play"></i>
+            </button>
+            <button id="nextButton" class="control-btn">
+                <i class="fa fa-forward"></i>
+            </button>
+        </div>
+    </div>
+    
+      
+
+    <div class="desktop">
+ <!-- Assuming this is your container -->
+
+            <div class="icon" id="icon-mzfx" style="top: 20px; left: 20px;" data-url="defbrowser.html">
+                <img src="fx.png" alt="Veil Browser">
+                <div class="icon-text">Firefox</div>
+            </div>
+        
+            <div class="icon" id="icon-fe" style="top: 120px; left: 20px;" data-url="MINT.html">
+                <img src="mint.png" alt="File Explorer">
+                <div class="icon-text">Mint Script</div>
+            </div>
+        
+            <div class="icon" id="icon-vs" style="top: 20px; left: 120px;" data-url="Local Compiler.html">
+                <img src="any.png" alt="Visual Studio Code">
+                <div class="icon-text">Visual Studio Code</div>
+            </div>
+        
+            <div class="icon" id="icon-terminal" style="top: 120px; left: 120px;" data-url="withersec.html">
+                <img src="ctr.png" alt="Terminal">
+                <div class="icon-text">CTM Python</div>
+            </div>
+        
+
+
+            
+
+    
+        
+        
+        
+        </div>
+        
+
+
+</div>
+    
+
+
+    </div>
+    </div>
+    <div class="taskbar" id="taskbar">
+        <div class="taskbar-icon-hel" style="background-image: url('snow.png');" data-name="Help" data-url=""></div>
+
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search">
+        </div>
+    
+        <div class="taskbar-icons">
+            <div class="taskbar-icon" style="background-image: url('eplk1.png');" data-url="File Explorer.html"></div>
+            <div class="taskbar-icon" style="background-image: url('ahs.png');" data-url="Terminal.html"></div>
+
+
+
+
+            
+
+            
+        </div>
+        
+        <div class="system-tray">
+            <div class="system-tray-icon" style="background-image: url('sound.png');" title="Sound"></div>
+            <div class="system-tray-icon" style="background-image: url('bravo.png');" title="Bluetooth"></div>
+            <div class="system-tray-icon" style="background-image: url('wifi.png');" title="WiFi"></div>
+            <div class="system-tray-icon" style="background-image: url('batlow.png');" title="Battery"></div>
+        </div>
+    </div>
+
+    <div id="customMenu">
+        <ul>
+            <li onclick="openPersonalization()">Shutdown</li>
+            <li onclick="createNewFolder()">Task Manager</li>
+            <li onclick="organizeIcons()">File Browser</li>
+            <li onclick="openTaskManager()">Isolate All Data</li>
+            <li onclick="refreshDesktop()">Shutdown Network</li>
+            <li onclick="refreshDesktop()">Personalization</li>
+            <li onclick="refreshDesktop()">Refresh</li>
+                <li onclick="refreshDesktop()">Organize Icons</li>
+        </ul>
+    </div>
+    
+    <style>
+        .taskbar {
+    background-color: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(10px); 
+    color: white; 
+    height: 50px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    cursor: pointer;
+    overflow-x: auto;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+}
+
+        .taskbar-icon-hel {
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+    
+        .search-container {
+    display: flex;
+    align-items: center;
+    background-color: #000000; 
+    border-radius: 20px;
+    padding: 0 10px;
+    margin-left: 10px;
+    width: 200px; 
+    border: 1px solid #474545;
+    height: 35px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.search-container input,
+.search-container button {
+    background-color: #000000; 
+    color: white; 
+    border: 1px solid #474545;
+    border-radius: 10px; 
+}
+
+.search-container input,
+.search-container button {
+    background-color: #000000; 
+    color: white; 
+    border: none; 
+    border-radius: 10px; 
+}
+
+.search-container input:focus,
+.search-container button:focus {
+    background-color: #000000; 
+    border: none; 
+    outline: none; 
+}
+
+
+.clickable {
+    cursor: pointer;  
+}
+
+
+#sleepFade {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0;  
+    pointer-events: none;  
+    transition: opacity 6s ease-in-out; 
+    z-index: 9999;  
+}
+
+
+.fade-out {
+    opacity: 1;  
+}
+
+        .search-input {
+            background-color: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            width: 100%;
+            height: 30px;
+            font-size: 16px;
+            padding-left: 10px;
+            border-radius: 10px;
+        }
+
+        .taskbar-icons {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-left: 20px;
+        }
+    
+        .taskbar-icon {
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 35px;
+            height: 35px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .system-tray {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-left: auto;
+        }
+    
+        .system-tray-icon {
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 25px;
+            height: 25px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+    <div id="systemMenu">
+        <ul>
+            <li><img src="lock.png" class="menu-icon"> Lock</li>
+            <li><img src="power.png" class="menu-icon"> Power Off</li>
+            <li><img src="restart.png" class="menu-icon"> Restart</li>
+            <li id="sleepButton" class="clickable">
+                <img src="sleep.png" class="menu-icon"> Sleep
+            </li>
+        </ul>
+    </div>
+    
+    <div id="sleepFade"></div>
+<style>
+#systemMenu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 113, 0.8); /* Dark purple with transparency */
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+    display: none;
+    width: 220px;
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#systemMenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#systemMenu li {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease-in-out;
+    border-radius: 6px;
+}
+
+#systemMenu li:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+}
+</style>
+
+   <script>
+document.addEventListener("keydown", function(event) {
+    if (event.ctrlKey && event.altKey && event.key === ",") {
+        event.preventDefault();
+        let menu = document.getElementById("systemMenu");
+        if (menu.style.display === "none" || menu.style.display === "") {
+            menu.style.display = "block";
+        } else {
+            menu.style.display = "none";
+        }
+    }
+});
+
+document.addEventListener("click", function(event) {
+    let menu = document.getElementById("systemMenu");
+    if (menu.style.display === "block" && !menu.contains(event.target)) {
+        menu.style.display = "none";
+    }
+});         
+// Play Leaves From the Vine on Ctrl + Alt + . quietly on loop
+window.addEventListener("DOMContentLoaded", function() {
+    const audio = new Audio("river.mp3");
+    audio.loop = true;
+    audio.volume = 0.1;
+
+    document.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && event.altKey && event.key === ".") {
+            audio.play().then(() => {
+                console.log("Audio is playing on loop.");
+            }).catch((error) => {
+                console.log("Error playing audio:", error);
+            });
+        }
+    });
+});
+</script>
+    <div class="time-display" id="timeDisplay">00:00:00 AM</div>
+
+    <div class="window" id="windowTemplate">
+        <div class="window-header">
+            <span class="window-title">Untitled</span>
+            <div class="window-controls">
+                <button class="minimize"></button>
+                <button class="maximize"></button>
+                <button class="close"></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <iframe class="window-iframe"></iframe>
+        </div>
+    </div>
+
+    <div id="appLauncher">
+        <div class="launcher-header">
+            <input type="text" class="launcher-search" placeholder="Search apps...">
+        </div>
+        <div id="launcherIcons" class="launcher-icons"></div>
+    </div>
+
+    <div id="launcherOnlyApps" style="display: none;">
+        <div class="launcher-app" data-url="Void 512.html" data-name="Void-512" data-icon="hj2.png"></div>
+        <div class="launcher-app" data-url="dos.html" data-name="Aircrack-ng" data-icon="ng.svg"></div>
+        <div class="launcher-app" data-url="seven.html" data-name="Dev-C++" data-icon="dev.png"></div>
+        <div class="launcher-app" data-url="Calender.html" data-name="Calendar" data-icon="calendar (1).png"></div>
+        <div class="launcher-app" data-url="decrom.html" data-name="DECrom Malware IDE" data-icon="decrom.png"></div>
+        <div class="launcher-app" data-url="yield.html" data-name="Terminal" data-icon="ahs.png"></div>
+        <div class="launcher-app" data-url="vs.html" data-name="XXE Compiler" data-icon="vks.png"></div>
+
+
+    </div>
+
+    <script>
+        function createWindow(title, url) {
+            const windowElement = document.getElementById('windowTemplate').cloneNode(true);
+            windowElement.id = '';
+            windowElement.style.display = 'block';
+            windowElement.style.left = '50px';
+            windowElement.style.top = '40px';
+            windowElement.querySelector('.window-title').textContent = title;
+            windowElement.querySelector('.window-iframe').src = url;
+
+            document.body.appendChild(windowElement);
+
+            makeDraggable(windowElement);
+            makeResizable(windowElement);
+
+            windowElement.querySelector('.close').addEventListener('click', function() {
+                windowElement.remove();
+            });
+
+            windowElement.querySelector('.minimize').addEventListener('click', function() {
+    windowElement.style.width = '200px'; 
+    windowElement.style.height = '50px'; 
+    windowElement.style.bottom = '0'; 
+    windowElement.style.left = '10px'; 
+    windowElement.querySelector('.window-content').style.display = 'none';
+});
+
+
+            windowElement.querySelector('.maximize').addEventListener('click', function() {
+    if (windowElement.style.width === '100vw' && windowElement.style.height === 'calc(100vh - 50px)') {
+        windowElement.style.width = '400px';
+        windowElement.style.height = '300px';
+    } else {
+        windowElement.style.width = '100vw';
+        windowElement.style.height = 'calc(100vh - 50px)'; 
+        windowElement.style.left = '0';
+        windowElement.style.top = '0';
+    }
+    windowElement.querySelector('.window-content').style.display = 'block';
+});
+
+        }
+
+        function openURLInWindow(url) {
+            const title = url.split('/').pop().split('.')[0];
+            createWindow(title, url);
+        }
+
+        function makeDraggable(el) {
+            let offsetX, offsetY, mouseX, mouseY;
+
+            el.querySelector('.window-header').addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                offsetX = e.clientX - el.getBoundingClientRect().left;
+                offsetY = e.clientY - el.getBoundingClientRect().top;
+
+                function onMouseMove(e) {
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                    el.style.left = `${mouseX - offsetX}px`;
+                    el.style.top = `${mouseY - offsetY}px`;
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+
+                document.addEventListener('mouseup', function() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                }, { once: true });
+            });
+        }
+
+        function makeResizable(el) {
+            const resizer = document.createElement('div');
+            resizer.style.width = '10px';
+            resizer.style.height = '10px';
+            resizer.style.backgroundColor = '#666';
+            resizer.style.position = 'absolute';
+            resizer.style.bottom = '0';
+            resizer.style.right = '0';
+            resizer.style.cursor = 'nwse-resize';
+            el.appendChild(resizer);
+
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+
+                function onMouseMove(e) {
+                    const width = e.clientX - el.getBoundingClientRect().left;
+                    const height = e.clientY - el.getBoundingClientRect().top;
+                    el.style.width = `${width}px`;
+                    el.style.height = `${height}px`;
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+
+                document.addEventListener('mouseup', function() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                }, { once: true });
+            });
+        }
+
+        function showAppLauncher() {
+            const launcher = document.getElementById('appLauncher');
+            const launcherIcons = document.getElementById('launcherIcons');
+            launcherIcons.innerHTML = ''; 
+
+            
+            document.querySelectorAll('.icon').forEach(icon => {
+                const launcherIcon = document.createElement('div');
+                launcherIcon.classList.add('launcher-icon');
+                launcherIcon.innerHTML = `<img src="${icon.querySelector('img').src}" alt="${icon.querySelector('.icon-text').textContent}"><div class="icon-text">${icon.querySelector('.icon-text').textContent}</div>`;
+                launcherIcon.setAttribute('data-url', icon.getAttribute('data-url'));
+
+                launcherIcon.addEventListener('click', function() {
+                    const url = launcherIcon.getAttribute('data-url');
+                    if (url) {
+                        openURLInWindow(url);
+                        hideAppLauncher();
+                    }
+                });
+
+                launcherIcons.appendChild(launcherIcon);
+            });
+
+            document.querySelectorAll('#launcherOnlyApps .launcher-app').forEach(app => {
+                const launcherIcon = document.createElement('div');
+                launcherIcon.classList.add('launcher-icon');
+                launcherIcon.innerHTML = `<img src="${app.getAttribute('data-icon')}" alt="${app.getAttribute('data-name')}"><div class="icon-text">${app.getAttribute('data-name')}</div>`;
+                launcherIcon.setAttribute('data-url', app.getAttribute('data-url'));
+
+                launcherIcon.addEventListener('click', function() {
+                    const url = launcherIcon.getAttribute('data-url');
+                    if (url) {
+                        openURLInWindow(url);
+                        hideAppLauncher();
+                    }
+                });
+
+                launcherIcons.appendChild(launcherIcon);
+            });
+
+            launcher.style.display = 'block';
+            setTimeout(() => {
+                launcher.classList.add('launcher-open');
+            }, 10);
+        }
+
+        function hideAppLauncher() {
+            const launcher = document.getElementById('appLauncher');
+            launcher.classList.remove('launcher-open');
+            setTimeout(() => {
+                launcher.style.display = 'none';
+            }, 300);
+        }
+
+        document.addEventListener('keydown', function(event) {
+    if (event.altKey && event.key.toLowerCase() === 'l') {
+        const launcher = document.getElementById('appLauncher');
+        if (launcher.classList.contains('launcher-open')) {
+            hideAppLauncher();
+        } else {
+            showAppLauncher();
+        }
+    }
+});
+
+
+        document.querySelectorAll('.icon').forEach(icon => {
+            icon.addEventListener('dblclick', function() {
+                const url = icon.getAttribute('data-url');
+                if (url) {
+                    openURLInWindow(url);
+                }
+            });
+        });
+
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const hour12 = hours % 12 || 12;
+            document.getElementById('timeDisplay').textContent = `${hour12}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        
+        document.querySelectorAll('.desktop .icon').forEach(icon => {
+            let offsetX, offsetY;
+
+            icon.addEventListener('mousedown', function(e) {
+                offsetX = e.clientX - icon.getBoundingClientRect().left;
+                offsetY = e.clientY - icon.getBoundingClientRect().top;
+
+                function onMouseMove(e) {
+                    icon.style.left = `${e.clientX - offsetX}px`;
+                    icon.style.top = `${e.clientY - offsetY}px`;
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+
+                document.addEventListener('mouseup', function() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                }, { once: true });
+            });
+        });
+document.addEventListener('DOMContentLoaded', function() {
+  const launcherSearch = document.querySelector('.launcher-search');
+
+  if (launcherSearch) {
+    launcherSearch.addEventListener('input', function() {
+      const searchTerm = launcherSearch.value.toLowerCase();
+      const icons = document.querySelectorAll('#launcherIcons .launcher-icon');
+
+      icons.forEach(icon => {
+        const iconName = icon.querySelector('.icon-text').textContent.toLowerCase();
+        if (iconName.indexOf(searchTerm) !== -1) {
+          icon.style.display = 'flex';
+        } else {
+          icon.style.display = 'none';
+        }
+      });
+    });
+  }
+});
+
+document.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); 
+    let menu = document.getElementById("customMenu");
+    menu.style.left = `${event.pageX}px`;
+    menu.style.top = `${event.pageY}px`;
+    menu.style.display = "block";
+});
+
+
+document.addEventListener("click", function () {
+    document.getElementById("customMenu").style.display = "none";
+});
+
+
+function openPersonalization() {
+    alert("Opening Personalization Settings...");
+}
+
+function createNewFolder() {
+    alert("Creating a new folder...");
+}
+
+function organizeIcons() {
+    alert("Organizing icons...");
+}
+
+function openTaskManager() {
+    alert("Opening Task Manager...");
+}
+
+window.addEventListener('load', function () {
+    var sleepButton = document.getElementById('sleepButton');
+    var sleepFade = document.getElementById('sleepFade');
+
+    if (sleepButton && sleepFade) {
+        sleepButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+            console.log("Sleep button clicked!");
+            sleepFade.classList.add('fade-out');
+            setTimeout(function () {
+                console.log("Fade complete!");
+            }, 6000);
+        });
+    } else {
+        console.error("Sleep button or fade div not found");
+    }
+});
+
+document.addEventListener("keydown", function (event) {
+    if (event.altKey && event.key === "0") {
+        event.preventDefault(); // Prevent any default browser behavior
+        window.location.href = "iris.html"; // Load the HTML file in the same tab
+    }
+});
+
+setTimeout(() => {
+    const searchBox = document.querySelector('.launcher-search');
+    searchBox.focus(); // Auto-focus the search box
+}, 10);
+
+
+function forceFullscreen() {
+    let elem = document.documentElement;
+    if (!document.fullscreenElement) {
+        elem.requestFullscreen({ navigationUI: "hide" }).catch(err => console.log(err));
+    }
+}
+
+// Track pressed keys
+let keysPressed = new Set();
+
+document.addEventListener("keydown", (e) => {
+    keysPressed.add(e.key);
+
+    // Check for "Ctrl + Alt + , + 8"
+    if (e.ctrlKey && e.altKey && keysPressed.has(",") && keysPressed.has("8")) {
+        e.preventDefault();
+        forceFullscreen();
+    }
+});
+
+document.addEventListener("keyup", (e) => {
+    keysPressed.delete(e.key);
+});
+
+let isDragging = false;
+let offsetX, offsetY;
+
+// Create draggable behavior
+const widget = document.getElementById('audioWidget');
+
+widget.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - widget.getBoundingClientRect().left;
+    offsetY = e.clientY - widget.getBoundingClientRect().top;
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        widget.style.left = `${e.clientX - offsetX}px`;
+        widget.style.top = `${e.clientY - offsetY}px`;
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+});
+
+// Toggle Widget on Ctrl + Alt + , + 7
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.altKey && e.key === '7') {
+        widget.style.display = widget.style.display === 'none' ? 'block' : 'none';
+    }
+});
+
+// Hide Widget on Ctrl + Alt + , + 6
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.altKey && e.key === '6') {
+        widget.style.display = 'none';
+    }
+});
+
+// Song Data
+const song = {
+    title: "Welcome Home, Son",
+    artist: "Radical Face",
+    image: "radical.jpg", // Replace with actual image path
+    length: 287, // 4:47 in seconds
+};
+
+// Update Widget with Audio Data
+function updateAudioMetadata() {
+    document.getElementById('audioTitle').innerText = song.title;
+    document.getElementById('audioSubtitle').innerText = song.artist;
+    document.getElementById('audioImage').src = song.image;
+}
+
+// Play/Pause Button Toggle
+let isPlaying = false;
+document.getElementById('playPauseButton').addEventListener('click', () => {
+    isPlaying = !isPlaying;
+    const playPauseIcon = document.getElementById('playPauseButton').querySelector('i');
+    playPauseIcon.classList.toggle('fa-play', !isPlaying);
+    playPauseIcon.classList.toggle('fa-pause', isPlaying);
+});
+
+// Fake Progress Bar for 4:47
+let currentTime = 0; // in seconds
+const progressBar = document.querySelector('.progress');
+const interval = setInterval(() => {
+    if (currentTime <= song.length) {
+        const progress = (currentTime / song.length) * 100;
+        progressBar.style.width = `${progress}%`;
+        currentTime++;
+    } else {
+        clearInterval(interval);
+    }
+}, 1000);
+
+// Call this function to initialize/update the widget with audio metadata
+updateAudioMetadata();
+
+// Taskbar icon click handler
+document.querySelectorAll('.taskbar-icon, .taskbar-icon-hel').forEach(icon => {
+    icon.addEventListener('click', function () {
+        const url = icon.getAttribute('data-url');
+        if (url) {
+            openURLInWindow(url);
+        }
+    });
+});
+
+document.querySelector('.taskbar-icon-hel').addEventListener('click', function() {
+    const launcher = document.getElementById('appLauncher');
+    if (launcher.classList.contains('launcher-open')) {
+        hideAppLauncher(); // Hide the launcher if it's open
+    } else {
+        showAppLauncher(); // Show the launcher if it's closed
+    }
+});
+
+document.querySelector('.system-tray').addEventListener('click', function() {
+    const quickSettings = document.getElementById('quickSettings');
+    
+    // Toggle visibility of the quick settings widget
+    if (quickSettings.style.display === 'none' || quickSettings.style.display === '') {
+        quickSettings.style.display = 'block';
+    } else {
+        quickSettings.style.display = 'none';
+    }
+});
+
+// Close the quick settings when clicking anywhere outside of it
+document.addEventListener('click', function(event) {
+    const quickSettings = document.getElementById('quickSettings');
+    if (!quickSettings.contains(event.target) && !document.querySelector('.system-tray').contains(event.target)) {
+        quickSettings.style.display = 'none';
+    }
+});
+
+const settingItems = document.querySelectorAll('.setting-item');
+
+settingItems.forEach(item => {
+    item.addEventListener('click', () => {
+        item.classList.toggle('selected'); // Toggle the 'selected' class
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const icons = document.querySelectorAll('.desktop .icon');
+
+    icons.forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation(); // prevent triggering the document click
+            icons.forEach(i => i.classList.remove('selected'));
+            icon.classList.add('selected');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        icons.forEach(icon => icon.classList.remove('selected'));
+    });
+});
+
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

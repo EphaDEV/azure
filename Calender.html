@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Calendar</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .calendar-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background-color: #1e1e1e;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e1e;
+        }
+
+        #current-date-time {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #current-month {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #time {
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+
+        #date {
+            font-size: 1em;
+        }
+
+        #short-date {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        button {
+            background-color: #6200ee;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background-color: #3700b3;
+        }
+
+        #calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;
+            background-color: #1e1e1e;
+        }
+
+        .calendar-day {
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            position: relative;
+            min-height: 80px;
+            border: 1px solid #333;
+            font-size: 0.9em;
+            overflow: hidden;
+        }
+
+        .calendar-day:hover {
+            background-color: #333;
+        }
+
+        .calendar-day .day-number {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-weight: bold;
+        }
+
+        .holiday {
+            position: relative;
+            color: #fff;
+            font-weight: bold;
+            border: 2px solid #333;
+            padding: 5px;
+        }
+
+        .holiday::after {
+            content: attr(data-holiday);
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background-color: #444;
+            color: #fff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            white-space: nowrap;
+        }
+
+        /* Holiday Decorations */
+        .holiday.new-year {
+            background: linear-gradient(to bottom right, #f44336, #e91e63); /* Red to pink gradient */
+        }
+
+        .holiday.martin-luther-king-jr {
+            background: linear-gradient(to bottom right, #ffeb3b, #ffc107); /* Yellow to amber gradient */
+        }
+
+        .holiday.presidents-day {
+            background: linear-gradient(to bottom right, #ff5722, #ff9800); /* Deep orange to orange gradient */
+        }
+
+        .holiday.memorial-day {
+            background: linear-gradient(to bottom right, #4caf50, #8bc34a); /* Green to light green gradient */
+        }
+
+        .holiday.independence-day {
+            background: linear-gradient(to bottom right, #d32f2f, #3f51b5); /* Red to blue gradient */
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .holiday.labor-day {
+            background: linear-gradient(to bottom right, #2196f3, #64b5f6); /* Blue to light blue gradient */
+        }
+
+        .holiday.columbus-day {
+            background: linear-gradient(to bottom right, #ff9800, #ff5722); /* Orange to deep orange gradient */
+        }
+
+        .holiday.veterans-day {
+            background: linear-gradient(to bottom right, #673ab7, #5c6bc0); /* Purple to light purple gradient */
+        }
+
+        .holiday.thanksgiving {
+            background: linear-gradient(to bottom right, #ffb74d, #ff9800); /* Light orange to orange gradient */
+        }
+
+        .holiday.christmas {
+            background: linear-gradient(to bottom right, #f44336, #4caf50); /* Red to green gradient */
+        }
+
+        .holiday.hanukkah {
+            background: linear-gradient(to bottom right, #00bcd4, #004d40); /* Teal to dark teal gradient */
+        }
+
+        .holiday.halloween {
+            background: linear-gradient(to bottom right, #ff9800, #ff5722); /* Orange to dark orange gradient */
+        }
+
+        .event-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #76ff03;
+            color: #000;
+            border-radius: 50%;
+            width: 10px;
+            height: 10px;
+            display: inline-block;
+        }
+
+        #side-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background-color: #2c2c2c;
+            border-left: 1px solid #333;
+            padding: 20px;
+            display: none;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        #side-panel h2 {
+            margin-top: 0;
+            color: #e0e0e0;
+        }
+
+        #side-panel label {
+            margin-top: 10px;
+            display: block;
+            color: #e0e0e0;
+        }
+
+        #side-panel input, #side-panel select {
+            display: block;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            width: calc(100% - 22px); /* Adjust width to account for padding and border */
+        }
+
+        #side-panel button {
+            background-color: #6200ee;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+
+        #side-panel button:hover {
+            background-color: #3700b3;
+        }
+
+        #close-panel-btn {
+            background-color: #d32f2f;
+        }
+
+        #close-panel-btn:hover {
+            background-color: #c62828;
+        }
+
+        #delete-event-btn {
+            background-color: #d32f2f;
+        }
+
+        #delete-event-btn:hover {
+            background-color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <header>
+            <div id="current-date-time">
+                <div id="time"></div>
+                <div id="date"></div>
+                <div id="short-date"></div>
+            </div>
+            <button id="prev-month">&lt;</button>
+            <h1 id="current-month"></h1>
+            <button id="next-month">&gt;</button>
+        </header>
+        <div id="calendar"></div>
+        <div id="side-panel">
+            <h2 id="panel-title">Event Details</h2>
+            <label for="event-title">Title:</label>
+            <input type="text" id="event-title">
+            <label for="event-start">Start Time:</label>
+            <input type="datetime-local" id="event-start">
+            <label for="event-end">End Time:</label>
+            <input type="datetime-local" id="event-end">
+            <label for="event-notify">Reminder:</label>
+            <select id="event-notify">
+                <option value="0">None</option>
+                <option value="5">5 minutes before</option>
+                <option value="15">15 minutes before</option>
+                <option value="30">30 minutes before</option>
+                <option value="60">1 hour before</option>
+            </select>
+            <button id="save-event-btn">Save Event</button>
+            <button id="delete-event-btn">Delete Event</button>
+            <button id="close-panel-btn">Close</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendarElement = document.getElementById('calendar');
+            const currentMonthElement = document.getElementById('current-month');
+            const prevMonthButton = document.getElementById('prev-month');
+            const nextMonthButton = document.getElementById('next-month');
+            const sidePanel = document.getElementById('side-panel');
+            const saveEventButton = document.getElementById('save-event-btn');
+            const closePanelButton = document.getElementById('close-panel-btn');
+            const deleteEventButton = document.getElementById('delete-event-btn');
+            const eventTitleInput = document.getElementById('event-title');
+            const eventStartInput = document.getElementById('event-start');
+            const eventEndInput = document.getElementById('event-end');
+            const eventNotifySelect = document.getElementById('event-notify');
+            const timeElement = document.getElementById('time');
+            const dateElement = document.getElementById('date');
+            const shortDateElement = document.getElementById('short-date');
+
+            const holidays = {
+                "01-01": "New Year's Day",
+                "01-15": "Martin Luther King Jr. Day",
+                "02-19": "Presidents' Day",
+                "05-27": "Memorial Day",
+                "07-04": "Independence Day",
+                "09-02": "Labor Day",
+                "10-14": "Columbus Day",
+                "11-11": "Veterans Day",
+                "11-28": "Thanksgiving Day",
+                "12-25": "Christmas Day",
+                "12-07": "Hanukkah",  // Example date
+                "10-31": "Halloween",
+                // Add more holidays as needed
+            };
+
+            let currentDate = new Date();
+            let selectedDate = null;
+            let events = JSON.parse(localStorage.getItem('events')) || [];
+
+            function renderCalendar() {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                currentMonthElement.textContent = `${year} - ${String(month + 1).padStart(2, '0')}`;
+
+                calendarElement.innerHTML = '';
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const totalDays = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+                for (let i = 0; i < totalDays; i++) {
+                    const day = i - firstDay + 1;
+                    const dayElement = document.createElement('div');
+                    dayElement.classList.add('calendar-day');
+                    if (day > 0 && day <= daysInMonth) {
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        dayElement.innerHTML = `<div class="day-number">${day}</div>`;
+                        const holidayName = holidays[`${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`];
+                        if (holidayName) {
+                            dayElement.classList.add('holiday');
+                            dayElement.setAttribute('data-holiday', holidayName);
+                            switch (holidayName) {
+                                case 'Hanukkah':
+                                    dayElement.classList.add('hanukkah');
+                                    break;
+                                case 'Christmas Day':
+                                    dayElement.classList.add('christmas');
+                                    break;
+                                case 'Thanksgiving Day':
+                                    dayElement.classList.add('thanksgiving');
+                                    break;
+                                case 'Independence Day':
+                                    dayElement.classList.add('independence-day');
+                                    break;
+                                case 'Martin Luther King Jr. Day':
+                                    dayElement.classList.add('martin-luther-king-jr');
+                                    break;
+                                case 'Presidents\' Day':
+                                    dayElement.classList.add('presidents-day');
+                                    break;
+                                case 'Memorial Day':
+                                    dayElement.classList.add('memorial-day');
+                                    break;
+                                case 'Labor Day':
+                                    dayElement.classList.add('labor-day');
+                                    break;
+                                case 'Columbus Day':
+                                    dayElement.classList.add('columbus-day');
+                                    break;
+                                case 'Veterans Day':
+                                    dayElement.classList.add('veterans-day');
+                                    break;
+                                case 'Halloween':
+                                    dayElement.classList.add('halloween');
+                                    break;
+                                default:
+                                    dayElement.classList.add('holiday');
+                            }
+                        }
+                        const dayEvents = events.filter(event => event.date === dateStr);
+                        if (dayEvents.length) {
+                            const event = dayEvents[0];
+                            const eventTitle = document.createElement('div');
+                            eventTitle.classList.add('event-title');
+                            eventTitle.textContent = event.title;
+                            dayElement.appendChild(eventTitle);
+                            const badge = document.createElement('div');
+                            badge.classList.add('event-badge');
+                            dayElement.appendChild(badge);
+                        }
+                        dayElement.addEventListener('click', () => openSidePanel(dateStr));
+                    } else {
+                        dayElement.style.opacity = '0.5';
+                    }
+                    calendarElement.appendChild(dayElement);
+                }
+            }
+
+            function openSidePanel(date) {
+                selectedDate = date;
+                document.getElementById('panel-title').textContent = `Event Details for ${date}`;
+                eventTitleInput.value = '';
+                eventStartInput.value = '';
+                eventEndInput.value = '';
+                eventNotifySelect.value = '0';
+                const dayEvents = events.filter(event => event.date === date);
+                if (dayEvents.length) {
+                    const event = dayEvents[0];
+                    eventTitleInput.value = event.title;
+                    eventStartInput.value = event.start;
+                    eventEndInput.value = event.end;
+                    eventNotifySelect.value = event.notify;
+                }
+                sidePanel.style.display = 'block';
+            }
+
+            function closeSidePanel() {
+                sidePanel.style.display = 'none';
+            }
+
+            function saveEvent() {
+                const title = eventTitleInput.value;
+                const start = eventStartInput.value;
+                const end = eventEndInput.value;
+                const notify = parseInt(eventNotifySelect.value, 10);
+
+                if (title && start && end) {
+                    const existingEventIndex = events.findIndex(event => event.date === selectedDate);
+                    if (existingEventIndex > -1) {
+                        events.splice(existingEventIndex, 1);
+                    }
+                    events.push({ title, start, end, date: selectedDate, notify });
+                    localStorage.setItem('events', JSON.stringify(events));
+                    closeSidePanel();
+                    renderCalendar();
+                    setNotifications();
+                }
+            }
+
+            function deleteEvent() {
+                events = events.filter(event => event.date !== selectedDate);
+                localStorage.setItem('events', JSON.stringify(events));
+                closeSidePanel();
+                renderCalendar();
+                setNotifications();
+            }
+
+            function setNotifications() {
+                events.forEach(event => {
+                    if (event.notify > 0) {
+                        const [eventDate, eventTime] = event.start.split('T');
+                        const [eventHours, eventMinutes] = eventTime.split(':').map(Number);
+                        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+                        const notificationTime = new Date(eventDateTime.getTime() - event.notify * 60000);
+
+                        if (notificationTime > new Date()) {
+                            setTimeout(() => {
+                                showNotification(event.title, event.start);
+                            }, notificationTime.getTime() - new Date().getTime());
+                        }
+                    }
+                });
+            }
+
+            function showNotification(title, time) {
+                if (Notification.permission === 'granted') {
+                    new Notification('Upcoming Event', {
+                        body: `${title} at ${time}`,
+                        icon: 'https://via.placeholder.com/48'
+                    });
+                }
+            }
+
+            function updateDateTime() {
+                const now = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const shortDateOptions = { year: '2-digit', month: '2-digit', day: '2-digit' };
+                timeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                dateElement.textContent = now.toLocaleDateString('en-US', options);
+                shortDateElement.textContent = now.toLocaleDateString('en-US', shortDateOptions);
+            }
+
+            prevMonthButton.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            nextMonthButton.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            saveEventButton.addEventListener('click', saveEvent);
+            closePanelButton.addEventListener('click', closeSidePanel);
+            deleteEventButton.addEventListener('click', deleteEvent);
+
+            document.addEventListener('click', (e) => {
+                if (!sidePanel.contains(e.target) && !e.target.closest('.calendar-day')) {
+                    closeSidePanel();
+                }
+            });
+
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    setNotifications();
+                }
+            });
+
+            setInterval(updateDateTime, 1000);
+            renderCalendar();
+        });
+    </script>
+</body>
+</html>

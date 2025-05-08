@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Explorer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            color: #ffffff;
+        }
+
+        /* Background Video */
+        .background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* Transparent overlay for blurred effect */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(15px);
+            z-index: -1;
+        }
+
+/* Header Styling */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(17, 17, 17, 0.7);
+    padding: 15px;
+    border-bottom: 2px solid #444444;
+    position: relative;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.encrypted {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: green;
+    margin-right: 10px;
+}
+
+.header-middle {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 14px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between image and text */
+    flex-direction: row-reverse; /* Swaps order of profile picture and username */
+}
+
+.header-right img {
+    width: 40px; /* Profile picture size */
+    height: 40px;
+    border-radius: 50%;
+}
+
+.header-right span {
+    font-size: 16px;
+    position: relative;
+    top: -3px; /* Adjusts username position */
+}
+
+
+        /* Container with Sidebar and File List */
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: rgba(17, 17, 17, 0.8);
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 2px solid #444444;
+            overflow-y: auto; /* Allow scrolling in the sidebar */
+            z-index: 1;
+        }
+
+        .folder {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            cursor: pointer;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #444444;
+        }
+
+        .folder:hover {
+    background-color: transparent;
+}
+
+
+        .folder-name {
+            font-size: 16px;
+        }
+
+        .folder img {
+            width: 18px; /* Reduced icon size */
+            margin-right: 10px;
+        }
+
+/* File List */
+.file-list {
+    flex-grow: 1;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+    max-height: calc(100vh - 60px); /* Add max-height to limit the size */
+    overflow-y: auto; /* Enable scrolling when content exceeds height */
+}
+
+
+.file {
+    padding: 10px;
+    border-bottom: 1px solid #444444;
+    cursor: pointer;
+}
+
+.file:hover {
+    background-color: rgba(17, 17, 17, 0.7);
+}
+
+
+        .file img {
+            width: 20px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        #customMenu {
+    position: absolute;
+    background: rgba(30, 30, 30, 0.7); 
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px); 
+    display: none;
+    width: 200px;
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#customMenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#customMenu li {
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease-in-out;
+    border-radius: 6px;
+}
+
+#customMenu li:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+ 
+
+    </style>
+</head>
+<body>
+
+    <div id="customMenu">
+        <ul>
+            <li onclick="openPersonalization()">Open</li>
+            <li onclick="createNewFolder()">Properties</li>
+            <li onclick="organizeIcons()">Delete</li>
+            <li onclick="openTaskManager()">Rename</li>
+            <li onclick="refreshDesktop()">Convert</li>
+            <li onclick="changeWallpaper()">Version History</li>
+        </ul>
+    </div>
+
+    <video class="background-video" autoplay loop muted>
+        <source src="" type="video/mp4">
+    </video>
+
+    <div class="overlay"></div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="encrypted"></div>
+            <span>Encrypted</span>
+        </div>
+        <div class="header-middle" id="file-path">
+            A:\id\snoopy\
+        </div>
+        <div class="header-right">
+            <img src="shadep.png" alt="Profile Picture">
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="folder" onclick="openFolder('folder1')">
+                <img src="down.png" alt="Folder Icon">
+                <span class="folder-name">Downloads</span>
+            </div>
+            <div class="folder" onclick="openFolder('folder_2')">
+                <img src="document.png" alt="Folder Icon">
+                <span class="folder-name">TEMPORA</span>
+            </div>
+            <div class="folder" onclick="openFolder('folder3')">
+                <img src="files.png" alt="Folder Icon">
+                <span class="folder-name">C++</span>
+            </div>
+            <div class="folder" onclick="openFolder('folder5')">
+                <img src="folder.png" alt="Folder Icon">
+                <span class="folder-name">Threat Intel</span>
+            </div>
+            <div class="folder" onclick="openFolder('folder6')">
+                <img src="folder.png" alt="Folder Icon">
+                <span class="folder-name">Scripts</span>
+            </div>
+
+            <div class="folder" onclick="openFolder('folder15')">
+                <img src="folder.png" alt="Folder Icon">
+                <span class="folder-name">Trash</span>
+            </div>
+        </div>
+
+        <div class="file-list" id="file-list">
+            <h2>Select a folder to view files</h2>
+        </div>
+    </div>
+
+    <script>
+        const folderData = {
+            folder1: [
+            { name: 'script.txt', type: 'txt', icon: 'file.png', path: '/folder1/file1.txt' },
+            
+            ],
+            folder_2: [
+                { name: 'snoopy.xxe', type: 'xxe', icon: 'snop.png', path: '/folder_/snoopy.xxe' },
+                { name: 'wraith.xxe', type: 'xxe', icon: 'wraith.png', path: '/folder_2/wraith.xxe' },
+                { name: 'xsnetwork.xxe', type: 'xxe', icon: 'xs.png', path: '/folder_2/xsnetwork.xxe' },
+                { name: 'snoopy.xxe', type: 'xxe', icon: 'snop.png', path: '/folder_2/snoopy.xxe' },
+                { name: 'XKeyscore', type: 'xxe', icon: 'xkey.png', path: '/folder_2/xks' },
+                { name: 'minuteman-iran.xxe', type: 'xxe', icon: 'minuteman.png', path: '/folder_2/mminuteman-iran.xxe' },
+            ],
+            folder3: [
+            { name: 'hjsfd9.png', type: 'png', icon: 'photo.png', path: '/assets/hjsfd9.png' },
+{ name: 'catt.exe', type: 'txt', icon: 'file.png', path: '/bin/catt.exe' },
+{ name: 'djh2q.exe', type: 'txt', icon: 'file.png', path: '/bin/djh2q.exe' },
+{ name: 'pc32.avi', type: 'txt', icon: 'photo.png', path: '/videos/pc32.avi' },
+{ name: '03udf9.wav', type: 'txt', icon: 'photo.png', path: '/audio/03udf9.wav' },
+{ name: 'a8sd7f.bmp', type: 'png', icon: 'photo.png', path: '/images/a8sd7f.bmp' },
+{ name: 'test_file.7z', type: 'txt', icon: 'file.png', path: '/archives/test_file.7z' },
+{ name: 'we98h.json', type: 'txt', icon: 'file.png', path: '/config/we98h.json' },
+{ name: 'ps38dk.dat', type: 'txt', icon: 'file.png', path: '/system/ps38dk.dat' },
+{ name: 'fsh37.exe', type: 'txt', icon: 'file.png', path: '/random/fsh37.exe' },
+
+{ name: 'x9sdhf.mkv', type: 'txt', icon: 'photo.png', path: '/videos/x9sdhf.mkv' },
+
+            ],
+        };
+
+        let currentPath = 'A:\\id\\floki\\';
+
+        function openFolder(folderName) {
+            const fileList = document.getElementById('file-list');
+            const files = folderData[folderName];
+            
+            currentPath = `A:\\id\\floki\\${folderName}\\`;
+            document.getElementById('file-path').innerText = currentPath;
+
+            fileList.innerHTML = `<h2>Files in ${folderName}</h2>`;
+            
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.classList.add('file');
+                
+                fileItem.innerHTML = `
+                    <img src="${file.icon}" alt="${file.type}">
+                    <span>${file.name}</span>
+                `;
+                
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        document.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); 
+    let menu = document.getElementById("customMenu");
+    menu.style.left = `${event.pageX}px`;
+    menu.style.top = `${event.pageY}px`;
+    menu.style.display = "block";
+});
+
+
+document.addEventListener("click", function () {
+    document.getElementById("customMenu").style.display = "none";
+});
+
+
+function openPersonalization() {
+    alert("Opening Personalization Settings...");
+}
+
+function createNewFolder() {
+    alert("Creating a new folder...");
+}
+
+function organizeIcons() {
+    alert("Organizing icons...");
+}
+
+function openTaskManager() {
+    alert("Opening Task Manager...");
+}
+
+
+    </script>
+</body>
+</html>

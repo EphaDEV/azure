@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@700&display=swap" rel="stylesheet">
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inconsolata', monospace;
+        font-size: 18px;
+        font-weight: 700;
+        background: url('cc5ed9201818505.667b79cb6a8a6.jpg') no-repeat center center fixed;
+        background-size: cover;
+        color:#1846f7;
+        overflow: hidden;
+    }
+    
+    
+
+    
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dimmed background overlay */
+            z-index: 1;
+        }
+    
+        #terminal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 2;
+            overflow-y: auto; /* Allow scrolling */
+        }
+    
+        .line {
+            display: block;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    
+        .input-line {
+            display: flex;
+        }
+                                                
+        .prompt {
+            color: rgb(236, 209, 0);
+        }
+    
+        .user-input {
+            flex-grow: 1;
+            outline: none;
+            border: none;
+            background: none;
+            color: rgb(187, 187, 187);
+            font-family: inherit;
+            font-size: inherit;
+        }
+    
+        ::selection {
+            background: transparent;
+        }
+    
+        #input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+    
+        #user-input {
+            caret-color: transparent; /* hide default caret */
+            position: relative;
+            background: none;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: inherit;
+            color:rgb(197, 197, 197);
+            z-index: 2;
+        }   
+    
+        #block-cursor {
+            position: absolute;
+            background-color: #1846f7;
+            width: 8px;
+            height: 1em;
+            animation: blink 1s steps(1) infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+    
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+    
+</head>
+<body>
+
+    
+    <div id="overlay"></div>
+    <div id="terminal">
+        <div id="output">
+            <span class="line">Sierra 11 Pro (Tundra-GPR v.Security) [Version 1.0.1600.4]</span>
+            <span class="line">(c) Shadeware RU | USA | UK | DK. All rights reserved.</span>
+            <span class="line">Shell: Shadeware 4.21.5 | Mint Script</span>
+            <br>
+        </div>
+        <div class="input-line" id="input-container">
+            <span class="prompt" id="prompt">A:\id\user@gecko></span>
+            <input type="text" id="user-input" class="user-input" autofocus>
+            <div id="block-cursor"></div>
+        </div>
+        
+        
+
+    <script src="shell.js"></script> <!-- Link to commands.js file -->
+    <script>
+        const outputElement = document.getElementById('output');
+        const inputElement = document.getElementById('user-input');
+        const promptElement = document.getElementById('prompt');
+
+        let currentDir = 'A:\\id\\user@gecko'; // Default directory
+
+        inputElement.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const input = inputElement.value.trim();
+
+                // If input is empty, add a new line with the same prompt
+                if (input === '') {
+                    const commandLine = document.createElement('span');
+                    commandLine.className = 'line';
+                    commandLine.textContent = `${currentDir}>`; // Show the current dir as the prompt
+                    outputElement.appendChild(commandLine);
+
+                    const blankLine = document.createElement('br');
+                    outputElement.appendChild(blankLine);
+
+                    inputElement.value = '';
+                    window.scrollTo(0, document.body.scrollHeight);
+                    return;
+                }
+
+                const [command, ...args] = input.split(/\s+/);
+                const commandLine = document.createElement('span');
+                commandLine.className = 'line';
+                commandLine.textContent = `${currentDir}> ${input}`;
+                outputElement.appendChild(commandLine);
+
+                let response;
+                if (commands[command]) {
+                    response = commands[command](args);
+                } else {
+                    response = `'${command}' is not recognized as a commmand. If it is on your network, you can install it using env_var -sd [x]`;
+                }
+
+                if (response) {
+                    const responseLines = response.split('\n');
+                    responseLines.forEach(line => {
+                        const responseLine = document.createElement('span');
+                        responseLine.className = 'line';
+                        responseLine.textContent = line;
+                        outputElement.appendChild(responseLine);
+                    });
+                }
+
+                const blankLine = document.createElement('br');
+                outputElement.appendChild(blankLine);
+
+                inputElement.value = '';
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        });
+
+        // Update prompt after a cd command
+        function updatePrompt(dir) {
+            currentDir = dir;
+            promptElement.textContent = `${currentDir}>`;
+        }
+
+        // Override the cd command in commands.js to update the prompt
+        commands.cd = (args) => {
+            if (args.length === 0) return "The directory name is invalid.";
+            const newDir = args.join(' ');
+            updatePrompt(newDir);
+            return `Changed directory to ${newDir}`;
+        };
+
+        document.querySelectorAll('input').forEach(input => {
+  input.setAttribute('autocomplete', 'off');
+  input.setAttribute('autocorrect', 'off');
+  input.setAttribute('autocapitalize', 'off');
+  input.setAttribute('spellcheck', 'false');
+});
+
+const input = document.getElementById('user-input');
+const cursor = document.getElementById('block-cursor');
+
+function updateCursorPosition() {
+    const text = input.value;
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'absolute';
+    span.style.whiteSpace = 'pre';
+    span.style.font = window.getComputedStyle(input).font;
+    span.textContent = text;
+    document.body.appendChild(span);
+
+    const textWidth = span.getBoundingClientRect().width;
+    document.body.removeChild(span);
+
+    const inputRect = input.getBoundingClientRect();
+    const containerRect = document.getElementById('input-container').getBoundingClientRect();
+
+    cursor.style.left = `${input.offsetLeft + textWidth}px`;
+    cursor.style.top = `${input.offsetTop}px`;
+}
+
+input.addEventListener('input', updateCursorPosition);
+input.addEventListener('click', updateCursorPosition);
+window.addEventListener('load', updateCursorPosition);
+
+        
+    </script>
+</body>
+</html>

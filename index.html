@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pixie</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('type.png') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: backdrop-filter 0.5s ease;
+        }
+        .time-container {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+        .time {
+            font-size: 96px;
+            font-weight: 300;
+            line-height: 1.1;
+            margin: 0;
+            color: rgb(255, 255, 255);
+        }
+        .date {
+            font-size: 24px;
+            font-weight: 300;
+            color: rgb(255, 255, 255);
+            margin: 0;
+        }
+        .login-container {
+    position: absolute;
+    top: 30%; /* slightly above center */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
+    display: none;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+        .profile-pic-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: url('packet.gif') no-repeat center center;
+            background-size: cover;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        .user-name {
+            font-size: 24px;
+            font-weight: 400;
+            margin: 10px 0;
+            color: white;
+        }
+        .password-input {
+    font-size: 16px;
+    padding: 6px 10px;
+    width: 100%;
+    height: 25px;
+    max-width: 280px;
+    border: none;
+    border-radius: 10px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+        .error {
+            color: red;
+            display: none;
+            margin-top: 10px;
+        }
+        .user-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .user {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 20px;
+            transition: background 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .user:hover {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .user-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            margin-right: 10px;
+        }
+
+        .widgets-container {
+    position: absolute;
+    bottom: 20px; /* <-- add space here */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: space-between;
+    width: 90%;
+    padding: 10px;
+    gap: 10px;
+    z-index: 10;
+    transition: opacity 0.5s ease;
+}
+
+
+        .widget {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            width: 350px;
+            height: 150px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget h3 {
+            margin: 0 0 10px;
+        }
+
+        .widget-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+        }
+
+        .widget-content {
+            font-size: 14px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            font-size: 14px;
+        }
+        #world-time-widget p {
+    margin: 0;
+    line-height: 1.2;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="widgets-container" id="widgets-container">
+        <div class="widget" id="weather-widget">
+            <img src="weather.png" alt="Weather" class="widget-icon">
+            <div class="widget-content">
+                <p id="temp">59°F</p>
+                <p id="weather-condition">Partly Sunny</p>
+                <p id="high-low">High: 65°F | Low: 52°F</p>
+            </div>
+        </div>
+
+        <div class="widget" id="todo-widget">
+            <img src="todo.png" alt="To-Do" class="widget-icon">
+            <h3>To-Do List</h3>
+            <ul id="todo-list">
+                <li>You don't have anything in your To Do List.</li>
+            </ul>
+        </div>
+
+        <div class="widget" id="encryption-widget">
+            <img src="encryption.png" alt="Encryption" class="widget-icon">
+            <h3>Encryption</h3>
+            <ul id="encryption-status">
+                <li>Files: Decrypted</li>
+                <li>Netstat(R): Active AES-256</li>
+                <li>Data: Decrypted</li>
+                <li>Image: Decrypted</li>
+            </ul>
+        </div>
+
+        <div class="widget" id="world-time-widget">
+            <img src="globe.png" alt="World Time" class="widget-icon">
+            <h3>World Times</h3>
+            <p>Moscow: <span id="moscow-time"></span></p>
+            <p>Baghdad: <span id="baghdad-time"></span></p>
+            <p>London: <span id="london-time"></span></p>
+
+        </div>
+    </div>
+
+    <div class="time-container" id="time-container">
+        <div class="time" id="time"></div>
+        <div class="date" id="date"></div>
+    </div>
+
+    <div class="login-container" id="login-container">
+        <div class="profile-pic-container">
+            <div class="profile-pic" id="profile-pic"></div>
+            <div id="user-name" class="user-name">snoopy</div>
+        </div>
+        <input type="password" id="password" class="password-input">
+        <div class="error" id="error">Incorrect password. You have 3 attempts left.</div>
+    </div>
+
+    <div class="user-container" id="user-container">
+        <div class="user" onclick="selectUser('snoopy', 'koreancomicxx', 'packet.gif', 'type.png', 'Verra.html')">
+            <div class="user-pic" style="background: url('packet.gif');"></div>
+            <span>snoopy</span>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours() % 12 || 12).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+            const date = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('time').textContent = `${hours}:${minutes} ${ampm}`;
+            document.getElementById('date').textContent = date;
+
+            // World times
+            document.getElementById('moscow-time').textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('baghdad-time').textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Baghdad', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('london-time').textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        document.body.addEventListener('click', showLoginForm);
+        document.body.addEventListener('keypress', function(event) {
+            if (event.code === 'Space') {
+                showLoginForm();
+            }
+        });
+
+        function showLoginForm() {
+            document.body.style.backdropFilter = 'blur(8px)';
+            document.getElementById('time-container').style.opacity = '0';
+            document.getElementById('widgets-container').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('time-container').style.display = 'none';
+                document.getElementById('widgets-container').style.display = 'none';
+
+                const loginContainer = document.getElementById('login-container');
+                loginContainer.style.display = 'block';
+                loginContainer.style.opacity = '1';
+                loginContainer.style.transform = 'translateX(-50%) translateY(0)';
+
+                const userContainer = document.getElementById('user-container');
+                userContainer.style.display = 'flex';
+                userContainer.style.opacity = '1';
+
+                document.getElementById('password').focus();
+            }, 500);
+        }
+
+        document.getElementById('password').addEventListener('keypress', function(event) {
+            if (event.code === 'Enter') {
+                const password = event.target.value;
+                const currentUser = document.getElementById('user-name').textContent;
+                if (currentUser === 'snoopy' && password === 'koreancomicxx') {
+                    window.location.href = 'Verra.html';
+                } else {
+                    document.getElementById('error').style.display = 'block';
+                }
+            }
+        });
+
+        function selectUser(userName, password, profilePic, backgroundImg, nextPage) {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('user-name').textContent = userName;
+            document.getElementById('profile-pic').style.backgroundImage = `url(${profilePic})`;
+            document.body.style.background = `url(${backgroundImg}) no-repeat center center fixed`;
+            document.body.style.backgroundSize = 'cover';
+            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('login-container').style.opacity = '1';
+            document.getElementById('login-container').style.transform = 'translateX(-50%) translateY(0)';
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+        }
+    </script>
+</body>
+</html>

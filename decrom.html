@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malware IDE</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://i.ibb.co/dPQWFXG/dark-bg.jpg') center/cover no-repeat;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(10px);
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .header h1 {
+      color: #0f0;
+      font-size: 1.5rem;
+    }
+
+    .header button {
+      background: transparent;
+      border: 1px solid #0f0;
+      color: #0f0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .header button:hover {
+      background-color: rgba(0, 255, 0, 0.1);
+    }
+
+    .main {
+      display: flex;
+      flex-grow: 1;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      padding: 16px;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar h2 {
+      font-size: 1rem;
+      color: #ccc;
+      margin-bottom: 12px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .sidebar li {
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.2s;
+      cursor: pointer;
+      color: #ddd;
+    }
+
+    .sidebar li:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #editor {
+      flex-grow: 1;
+      height: 70%;
+      width: 100%;
+      background: transparent; /* Make background transparent */
+      border-radius: 8px;
+    }
+
+    .terminal {
+      height: 30%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      font-family: monospace;
+      font-size: 0.85rem;
+      padding: 12px;
+      overflow-y: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      color: #0f0;
+    }
+
+    .terminal input {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      outline: none;
+      width: 100%;
+      padding: 6px 12px;
+      color: #0f0;
+    }
+
+    .file-menu {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    .file-menu button {
+      background: transparent;
+      border: 1px solid #0f0;
+      color: #0f0;
+      padding: 8px 16px;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .file-menu button:hover {
+      background: rgba(0, 255, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Malware IDE</h1>
+    <div class="file-menu">
+      <button id="openFile">Open File</button>
+      <button id="saveFile">Save File</button>
+      <button id="changeLang">Change Language</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <h2>Framework</h2>
+      <ul>
+        <li>entry.mint</li>
+        <li>hooklayer.sys</li>
+        <li>socketcore.lib</li>
+        <li>injector32.exe</li>
+        <li>beacon_cfg.h</li>
+      </ul>
+      <div class="terminal" id="terminal"></div>
+    </div>
+
+    <div id="editor"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+  <script>
+    // Monaco Editor Setup
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+    let editor;
+    let currentLang = 'javascript'; // Default Language
+    let fileContent = "";
+
+    require(['vs/editor/editor.main'], function () {
+      editor = monaco.editor.create(document.getElementById('editor'), {
+        value: "// Start coding your malware framework...",
+        language: currentLang,
+        theme: 'vs-dark',
+        fontSize: 14,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false
+      });
+
+      // Adjust editor layout on window resize
+      window.addEventListener('resize', function () {
+        editor.layout();
+      });
+    });
+
+    // File Open Functionality
+    document.getElementById("openFile").addEventListener("click", () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.txt,.js,.c,.cpp,.h,.mint';
+      input.click();
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          fileContent = reader.result;
+          editor.setValue(fileContent);
+        };
+        reader.readAsText(file);
+      };
+    });
+
+    // Save File Functionality
+    document.getElementById("saveFile").addEventListener("click", () => {
+      const blob = new Blob([editor.getValue()], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'malware_code.' + currentLang;
+      link.click();
+    });
+
+    // Change Language Functionality
+    document.getElementById("changeLang").addEventListener("click", () => {
+      const lang = prompt("Enter language (js, cpp, python, c, html, etc.):", currentLang);
+      if (monaco.languages.getLanguages().some(langObj => langObj.id === lang)) {
+        currentLang = lang;
+        editor.getModel().setMode(monaco.languages.getLanguageIdentifier(lang).id);
+        editor.updateOptions({ language: lang });
+      } else {
+        alert('Unsupported language!');
+      }
+    });
+
+    // Terminal Interaction
+    const terminal = document.getElementById("terminal");
+
+    let logHistory = [];
+    let currentInput = "";
+
+    function appendToTerminal(text) {
+      const logElement = document.createElement("div");
+      logElement.textContent = text;
+      terminal.appendChild(logElement);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function handleTerminalInput(event) {
+      if (event.key === "Enter") {
+        if (currentInput.trim() === "exit") {
+          appendToTerminal("[*] Exiting malware framework...");
+        } else {
+          appendToTerminal("> " + currentInput);
+          logHistory.push(currentInput);
+          currentInput = "";
+          setTimeout(() => appendToTerminal("[*] Waiting for next command...", 500));
+        }
+      }
+    }
+
+    document.querySelector('.terminal').innerHTML = `
+      <input type="text" id="terminalInput" placeholder="Type command here..." />
+    `;
+
+    const terminalInput = document.getElementById('terminalInput');
+    terminalInput.addEventListener('keydown', handleTerminalInput);
+
+    appendToTerminal("[*] Welcome to the Malware Framework");
+  </script>
+</body>
+</html>

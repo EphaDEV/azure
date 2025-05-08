@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red/Black Code Editor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { font-family: Arial, sans-serif; background-color: black; color: #fff; }
+
+        #editor-container { display: flex; flex-direction: column; height: 100vh; }
+
+        #tabs { display: flex; background-color: black; padding: 5px; border-bottom: 2px solid red; }
+
+        .tab {
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .tab.active { background-color: red; }
+
+        #editor { flex-grow: 1; display: flex; flex-direction: column; background-color: black; }
+        #textarea { 
+            flex-grow: 1; 
+            background-color: black; 
+            color: red; 
+            padding: 10px; 
+            font-family: monospace; 
+            border: none; 
+            resize: none; 
+            outline: none;
+        }
+
+        #preview { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.9); color: white; padding: 20px; border-radius: 8px; }
+        #preview iframe { width: 100%; height: 300px; border: none; }
+
+        #options { display: flex; justify-content: space-between; padding: 10px; background-color: black; border-top: 2px solid red; }
+        button { 
+            background-color: red; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-size: 14px;
+        }
+
+        button:hover { background-color: #cc0000; }
+        button:focus { outline: none; }
+
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+    <div id="editor-container">
+        <div id="tabs"></div>
+        <div id="editor">
+            <textarea id="textarea" placeholder="Secure Script Environment Ready"></textarea>
+        </div>
+        <div id="options">
+            <button onclick="openPreview()">Preview Secure Script</button>
+            <button onclick="saveFile()">Save File</button>
+            <input type="file" id="file-input" onchange="openFile(event)">
+            <button onclick="document.getElementById('file-input').click()">Open File</button>
+        </div>
+    </div>
+
+    <div id="preview">
+        <iframe id="preview-frame"></iframe>
+        <button onclick="closePreview()">Close Preview</button>
+    </div>
+
+    <script>
+        let activeTabIndex = 0;
+        let tabs = [];
+        let activeTab = createTab('Untitled', '');
+
+        function createTab(name, content) {
+            const tabIndex = tabs.length;
+            const tab = document.createElement('div');
+            tab.classList.add('tab');
+            tab.textContent = name;
+            tab.onclick = () => switchTab(tabIndex);
+            tab.dataset.index = tabIndex;
+            tabs.push({ name, content });
+
+            if (tabIndex === 0) tab.classList.add('active');
+
+            document.getElementById('tabs').appendChild(tab);
+            return tab;
+        }
+
+        function switchTab(tabIndex) {
+            tabs[activeTabIndex].content = document.getElementById('textarea').value;
+
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab[data-index="${tabIndex}"]`).classList.add('active');
+            
+            activeTabIndex = tabIndex;
+            document.getElementById('textarea').value = tabs[tabIndex].content;
+        }
+
+        function openPreview() {
+            const htmlContent = tabs[activeTabIndex].content;
+            const previewFrame = document.getElementById('preview-frame');
+            previewFrame.srcdoc = htmlContent;
+            document.getElementById('preview').style.display = 'block';
+        }
+
+        function closePreview() {
+            document.getElementById('preview').style.display = 'none';
+        }
+
+        function saveFile() {
+            const blob = new Blob([tabs[activeTabIndex].content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = tabs[activeTabIndex].name || 'untitled.txt';
+            a.click();
+        }
+
+        function openFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const name = file.name;
+                    createTab(name, content);
+                    switchTab(tabs.length - 1);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        document.getElementById('textarea').addEventListener('input', function () {
+            tabs[activeTabIndex].content = this.value;
+        });
+    </script>
+</body>
+</html>

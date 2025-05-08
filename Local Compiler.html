@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Local Compiler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Inconsolata', monospace;
+      overflow: hidden;
+    }
+
+    body {
+      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                  url('') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    #editor-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Make entire Monaco editor and minimap transparent */
+    .monaco-editor,
+    .monaco-editor-background,
+    .margin,
+    .inputarea,
+    .monaco-editor .minimap,
+    .minimap-shadow-visible,
+    .monaco-editor .minimap-slider {
+      background-color: transparent !important;
+    }
+
+    /* Language Selector Menu */
+    #language-menu {
+      position: absolute;
+      top: 50px;
+      right: 50px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      color: white;
+      z-index: 1000;
+    }
+
+    #language-menu select {
+      background: #1e1e1e;
+      color: white;
+      border: none;
+      padding: 6px;
+      font-size: 14px;
+      width: 220px;
+    }
+
+    
+    /* File Save Menu */
+    #save-file-menu {
+      position: absolute;
+      top: 50px;
+      right: 50px;
+      background-color: rgba(30, 30, 30, 0.95);
+      border: 1px solid #555;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      color: white;
+      z-index: 1000;
+    }
+
+    #save-file-menu input {
+      background: #1e1e1e;
+      color: white;
+      border: none;
+      padding: 6px;
+      font-size: 14px;
+      width: 220px;
+    }
+
+    /* Open File Menu */
+#open-file-menu {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  background-color: rgba(30, 30, 30, 0.95);
+  border: 1px solid #555;
+  padding: 12px;
+  border-radius: 8px;
+  display: none;
+  color: white;
+  z-index: 1000;
+}
+
+  </style>
+</head>
+<body>
+
+  
+  <div id="editor-container"></div>
+
+  <!-- Open File Menu -->
+<div id="open-file-menu">
+  <label>Open a local file from disk</label><br><br>
+  <button id="open-file-btn">Choose File</button>
+</div>
+
+
+  <!-- Language Selector -->
+  <div id="language-menu">
+    <label for="language-select">Choose Language:</label><br>
+    <select id="language-select">
+      <option value="javascript">JavaScript</option>
+      <option value="typescript">TypeScript</option>
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="json">JSON</option>
+      <option value="python">Python</option>
+      <option value="c">C</option>
+      <option value="cpp">C++</option>
+      <option value="csharp">C#</option>
+      <option value="java">Java</option>
+      <option value="markdown">Markdown</option>
+      <option value="shell">Shell / Bash</option>
+      <option value="bat">Batch (.bat)</option>
+      <option value="xml">XML</option>
+      <option value="yaml">YAML</option>
+      <option value="sql">SQL</option>
+      <option value="plaintext">Plain Text</option>
+    </select>
+  </div>
+
+  <!-- Save File Menu -->
+  <div id="save-file-menu">
+    <label for="file-name">File Name:</label><br>
+    <input type="text" id="file-name" placeholder="Enter file name"><br><br>
+    <label for="file-extension">File Extension:</label><br>
+    <select id="file-extension">
+      <option value="txt">.txt</option>
+      <option value="js">.js</option>
+      <option value="html">.html</option>
+      <option value="css">.css</option>
+      <option value="py">.py</option>
+      <option value="cpp">.cpp</option>
+      <option value="java">.java</option>
+      <option value="md">.md</option>
+      <option value="winsys.mint">.winsys.mint</option>
+      <option value="mint">.mint</option>
+      <option value="winsys.uefi.mint">.winsys.uefi.mint</option>
+      <option value="winsys.bios.mint">.winsys.bios.mint</option>
+    </select><br><br>
+    <button id="save-file-btn">Save File</button>
+  </div>
+
+  <!-- Monaco Editor Loader -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script>
+    let editor;
+
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+
+    require(['vs/editor/editor.main'], function () {
+      // Transparent theme
+      monaco.editor.defineTheme('transparent-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'editor.background': '#00000000',
+          'editorGutter.background': '#00000000',
+          'minimap.background': '#00000000',
+          'minimapSlider.background': '#00000000',
+          'minimapSlider.activeBackground': '#00000000',
+          'minimapSlider.hoverBackground': '#00000000',
+        }
+      });
+
+      editor = monaco.editor.create(document.getElementById('editor-container'), {
+        value: `// Ctrl + Alt + , to change language\n\nfunction hello() {\n  console.log("Hello world!");\n}`,
+        language: 'javascript',
+        theme: 'transparent-dark',
+        fontSize: 14,
+        lineNumbers: 'on',
+        fontFamily: 'Consolas, "Courier New", monospace',
+        minimap: { enabled: true }
+      });
+    });
+
+    // Toggle language menu with Ctrl + Alt + ,
+    window.addEventListener('keydown', function (e) {
+      if (e.ctrlKey && e.altKey && e.key === ',') {
+        const menu = document.getElementById('language-menu');
+        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+      }
+    });
+
+    // Toggle save file menu with Ctrl + Alt + .
+    window.addEventListener('keydown', function (e) {
+      if (e.ctrlKey && e.altKey && e.key === '.') {
+        const menu = document.getElementById('save-file-menu');
+        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+      }
+    });
+
+    // Change language
+    document.getElementById('language-select').addEventListener('change', function () {
+      const lang = this.value;
+      monaco.editor.setModelLanguage(editor.getModel(), lang);
+      document.getElementById('language-menu').style.display = 'none';
+    });
+
+    // Hide language menu when clicking outside
+    document.addEventListener('click', function (e) {
+      const menu = document.getElementById('language-menu');
+      const select = document.getElementById('language-select');
+      if (menu.style.display === 'block' && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+
+// Save the file
+document.getElementById('save-file-btn').addEventListener('click', async function () {
+  const content = editor.getValue();
+
+  if (currentFileHandle) {
+    try {
+      const writable = await currentFileHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+    } catch (err) {
+      console.error('Failed to save to the same file:', err);
+    }
+  } else {
+    const fileName = document.getElementById('file-name').value;
+    const fileExtension = document.getElementById('file-extension').value;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName + '.' + fileExtension;
+    link.click();
+  }
+
+  // Hide the save file menu
+  document.getElementById('save-file-menu').style.display = 'none';
+});
+
+
+    // Hide save file menu when clicking outside
+    document.addEventListener('click', function (e) {
+      const menu = document.getElementById('save-file-menu');
+      if (menu.style.display === 'block' && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (editor) {
+        editor.layout(); // Monaco adjusts itself to the new container size
+      }
+    });
+
+    let currentFileHandle = null;
+
+// Toggle open file menu with Ctrl + Alt + 1
+window.addEventListener('keydown', function (e) {
+  if (e.ctrlKey && e.altKey && e.key === '1') {
+    const menu = document.getElementById('open-file-menu');
+    menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+  }
+});
+
+// Hide open file menu when clicking outside
+document.addEventListener('click', function (e) {
+  const menu = document.getElementById('open-file-menu');
+  if (menu.style.display === 'block' && !menu.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+// Open file from disk
+document.getElementById('open-file-btn').addEventListener('click', async function () {
+  try {
+    const [handle] = await window.showOpenFilePicker();
+    currentFileHandle = handle;
+    const file = await handle.getFile();
+    const contents = await file.text();
+    editor.setValue(contents);
+    document.getElementById('open-file-menu').style.display = 'none';
+  } catch (err) {
+    console.error("File open canceled or failed", err);
+  }
+});
+
+document.querySelectorAll('*').forEach(el => el.setAttribute('spellcheck', 'false'));
+
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Web Browser</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    backdrop-filter: blur(10px);
+}
+
+/* Browser Container */
+#browser {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#tabs {
+    display: flex;
+    align-items: center;
+    background: rgba(15, 15, 15, 0.7); /* Keep the transparent background */
+    backdrop-filter: blur(12px);
+    padding: 8px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 6px;
+}
+
+/* Tab Styling */
+.tab {
+    position: relative;
+    background: rgba(40, 40, 40, 0.5); /* Transparent background for tabs */
+    backdrop-filter: blur(8px);
+    color: white;
+    padding: 12px 20px; /* Wider and more rectangular tabs */
+    border-radius: 18px; /* Rounded corners like Firefox tabs */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.3s, transform 0.2s;
+    min-width: 100px; /* Ensuring tabs are wider like Firefox */
+    margin-right: 8px; /* Space between tabs */
+}
+
+.tab.active {
+    background: rgba(60, 60, 60, 0.8); /* Active tab has a more opaque background */
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.tab:hover {
+    background: rgba(100, 100, 100, 0.6); /* Hover effect on tabs */
+    transform: translateY(-2px);
+}
+
+/* Tab Close Button */
+.tab .close-tab {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    color: red; /* Red color for close button */
+    cursor: pointer;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.tab .close-tab:hover {
+    color: darkred; /* Slightly darker red on hover */
+}
+
+/* New Tab Button */
+.new-tab {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 10px;
+    transition: color 0.3s, transform 0.2s;
+}
+
+.new-tab:hover {
+    color: rgba(180, 180, 180, 0.8); /* New tab hover color */
+    transform: scale(1.1);
+}
+
+
+/* New Tab Button */
+.new-tab {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 10px;
+    transition: color 0.3s, transform 0.2s;
+}
+
+.new-tab:hover {
+    color: rgba(180, 180, 180, 0.8);
+    transform: scale(1.1);
+}
+
+/* Toolbar */
+#toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Toolbar Buttons */
+#toolbar-left, #toolbar-right {
+    display: flex;
+    align-items: center;
+}
+
+#toolbar-left button,
+#toolbar-right button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-right: 8px;
+    padding: 6px 8px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+#toolbar-left button:hover,
+#toolbar-right button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    transform: scale(1.05);
+}
+
+/* URL Bar */
+#url {
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 16px;
+}
+
+/* Content Area */
+#content {
+    flex: 1;
+    position: relative;
+}
+
+/* Background Video */
+#video-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* Homepage */
+#homepage {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+#homepage img {
+    width: 320px;
+    margin-bottom: 20px;
+}
+
+#homepage .search-box-wrapper {
+    width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+#homepage .search-box {
+    width: 100%;
+    padding: 15px 20px;
+    border: none;
+    outline: none;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+    color: #333;
+}
+
+#homepage .search-box::placeholder {
+    color: #aaa;
+}
+
+#homepage .search-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: #888;
+    cursor: pointer;
+}
+
+/* Custom Right-Click Menu */
+#customMenu {
+    position: absolute;
+    background: rgba(30, 30, 30, 0.7);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+    display: none;
+    width: 200px;
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#customMenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#customMenu li {
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease-in-out;
+    border-radius: 6px;
+}
+
+#customMenu li:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+}
+
+iframe {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+}
+iframe {
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+
+    </style>
+</head>
+<body>
+
+    <video id="video-bg" autoplay loop muted>
+        <source src="jung.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div id="customMenu">
+        <ul>
+            <li onclick="openPersonalization()">Save Page As...</li>
+            <li onclick="createNewFolder()">Permissions</li>
+            <li onclick="organizeIcons()">Reload</li>
+            <li onclick="openTaskManager()">Inspect</li>
+        </ul>
+    </div>    
+
+
+    <div id="browser">
+        <!-- Tabs -->
+        <div id="tabs">
+            <div class="tab active" data-tab="tab1">
+                New Tab
+                <button class="close-tab">X</button>
+            </div>
+            <button class="new-tab">+</button>
+        </div>
+
+        <!-- Toolbar -->
+        <div id="toolbar">
+            <div id="toolbar-left">
+                <button id="refresh">🔄</button>
+                <button id="back">←</button>
+                <button id="forward">→</button>
+                <button id="home">🏠</button>
+            </div>
+            <input type="text" id="url" placeholder="Enter URL or search...">
+            <div id="toolbar-right">
+                <button id="options">⋮</button>
+                <div id="options-menu">
+                    <button>History</button>
+                    <button>NoScript</button>
+                    <button>Force Stop</button>
+                    <button id="toggle-theme">ActiveMOD</button>
+                    <button>See IP Addresses</button>
+                    <button>Activity</button>
+                    <button>DEV</button>
+                    <button>Download Page</button>
+                    <button>Tor Access (Beta)</button>
+                    <button>Site Permissions</button>
+                    <button>Turn On Cookies</button>
+                    <button id="open-html">Open HTML File</button>
+<input type="file" id="file-input" accept=".html" style="display: none;">
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div id="content">
+            <!-- Homepage -->
+            <div id="homepage">
+                <img src="google.png" alt="Google Logo">
+                <div class="search-box-wrapper">
+                    <input type="text" class="search-box" id="search" placeholder="Search or type a URL">
+                    <span class="search-icon">🔍</span>
+                </div>
+            </div>
+
+            <!-- Iframe -->
+            <iframe id="iframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('iframe');
+        const searchInput = document.getElementById('search');
+        const urlInput = document.getElementById('url');
+        const homepage = document.getElementById('homepage');
+        const tabsContainer = document.getElementById('tabs');
+        const optionsMenu = document.getElementById('options-menu');
+        const toggleThemeButton = document.getElementById('toggle-theme');
+
+        document.getElementById('back').addEventListener('click', () => iframe.contentWindow.history.back());
+        document.getElementById('forward').addEventListener('click', () => iframe.contentWindow.history.forward());
+        document.getElementById('refresh').addEventListener('click', () => iframe.contentWindow.location.reload());
+        document.getElementById('home').addEventListener('click', () => {
+            homepage.style.display = 'block';
+            iframe.style.display = 'none';
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') navigate(searchInput.value);
+        });
+        document.querySelector('.search-icon').addEventListener('click', () => navigate(searchInput.value));
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') navigate(urlInput.value);
+        });
+
+        document.getElementById('options').addEventListener('click', () => {
+            optionsMenu.style.display = optionsMenu.style.display === 'block' ? 'none' : 'block';
+        });
+
+        toggleThemeButton.addEventListener('click', () => {
+            if (document.body.style.backgroundColor === 'white') {
+                document.body.style.backgroundColor = '#121212';
+                document.body.style.color = 'white';
+            } else {
+                document.body.style.backgroundColor = 'white';
+                document.body.style.color = 'black';
+            }
+        });
+
+        function navigate(url) {
+    homepage.style.display = 'none';
+    iframe.style.display = 'block';
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://bing.com/web?query=' + encodeURIComponent(url);
+    }
+    iframe.src = url;
+    urlInput.value = url;
+}
+
+
+        tabsContainer.addEventListener('click', (e) => {
+            const clickedTab = e.target.closest('.tab');
+            if (clickedTab) {
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                clickedTab.classList.add('active');
+                homepage.style.display = 'block';
+                iframe.style.display = 'none';
+            }
+
+            if (e.target.classList.contains('close-tab')) {
+                clickedTab.remove();
+            }
+        });
+
+        document.querySelector('.new-tab').addEventListener('click', () => {
+            const newTab = document.createElement('div');
+            newTab.classList.add('tab');
+            newTab.innerHTML = 'New Tab          <button class="close-tab">x</button>';
+            tabsContainer.insertBefore(newTab, document.querySelector('.new-tab'));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#options')) {
+                optionsMenu.style.display = 'none';
+            }
+        });
+
+        document.getElementById('open-html').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            homepage.style.display = 'none';
+            iframe.style.display = 'block';
+            iframe.srcdoc = e.target.result; // Load HTML content inside the iframe
+        };
+        reader.readAsText(file);
+    }
+});
+
+
+document.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); 
+    let menu = document.getElementById("customMenu");
+    menu.style.left = `${event.pageX}px`;
+    menu.style.top = `${event.pageY}px`;
+    menu.style.display = "block";
+});
+
+
+document.addEventListener("click", function () {
+    document.getElementById("customMenu").style.display = "none";
+});
+
+
+function openPersonalization() {
+    alert("Opening Personalization Settings...");
+}
+
+function createNewFolder() {
+    alert("Creating a new folder...");
+}
+
+function organizeIcons() {
+    alert("Organizing icons...");
+}
+
+function openTaskManager() {
+    alert("Opening Task Manager...");
+}
+
+document.querySelector('#refresh').addEventListener('click', function() {
+    location.reload(); // This will refresh the current page
+});
+
+document.getElementById('home').addEventListener('click', () => {
+    const filePath = 'browserset.html'; // Replace with the actual file path
+    iframe.src = filePath; // Directly set the iframe's source to the file path
+    homepage.style.display = 'none';
+    iframe.style.display = 'block';
+});
+
+
+
+
+    </script>
+</body>
+</html>
